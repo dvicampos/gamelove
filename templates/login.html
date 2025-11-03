@@ -2,29 +2,275 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <title>Login - BubuGame</title>
+  <title>Login — BubuGame</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0f172a">
   <style>
-    body{background:#0f172a;color:white;font-family:system-ui;display:flex;align-items:center;justify-content:center;min-height:100vh;}
-    .box{background:rgba(15,23,42,.35);border:1px solid rgba(148,163,184,.25);padding:1.5rem 1.5rem 1.25rem;border-radius:1.25rem;width: min(360px, 100%);}
-    input{width:100%;padding:.5rem .6rem;margin-bottom:.5rem;border-radius:.5rem;border:1px solid rgba(255,255,255,.08);background:rgba(15,23,42,.35);color:white;}
-    button{width:100%;background:#f472b6;border:none;padding:.55rem 0;border-radius:.75rem;color:white;font-weight:600;margin-top:.25rem;}
-    a{color:#f472b6;text-decoration:none;font-size:.8rem;}
-    .err{background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.35);padding:.4rem .5rem;border-radius:.5rem;margin-bottom:.5rem;}
+    :root{
+      --bg: radial-gradient(circle at 30% -10%, #0f172a 0%, #0b1228 40%, #020617 70%, #000 100%);
+      --card: rgba(15,23,42,.45);
+      --stroke: rgba(148,163,184,.28);
+      --ink: #e2e8f0;
+      --muted: #94a3b8;
+      --accent: #f472b6;
+      --accent-2: #fb7185;
+      --radius: 18px;
+      --shadow: 0 18px 50px rgba(244,114,182,.18);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body{
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+
+    /* background glow blobs */
+    .glow, .glow2{
+      position: fixed;
+      inset: -20% -20% auto auto;
+      width: 60vmax; height: 60vmax;
+      background: radial-gradient(circle, rgba(244,114,182,.12), transparent 60%);
+      filter: blur(60px);
+      z-index: 0;
+      animation: drift 18s ease-in-out infinite alternate;
+      pointer-events: none;
+    }
+    .glow2{
+      inset: auto auto -25% -25%;
+      width: 50vmax; height: 50vmax;
+      background: radial-gradient(circle, rgba(56,189,248,.09), transparent 60%);
+      animation-duration: 22s;
+    }
+    @keyframes drift {
+      from { transform: translate3d(-2%, 0, 0) scale(1); }
+      to   { transform: translate3d(2%, -2%, 0) scale(1.05); }
+    }
+
+    .wrap{
+      position: relative;
+      z-index: 1;
+      width: min(420px, 92vw);
+      padding: 24px;
+    }
+
+    .card{
+      background: var(--card);
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+      padding: 20px 20px 18px;
+    }
+
+    .brand{
+      display: flex; align-items: center; gap: .75rem;
+      margin-bottom: .75rem;
+    }
+    .brand-logo{
+      width: 40px; height: 40px; border-radius: 10px;
+      background: rgba(2,6,23,.6);
+      border: 1px solid rgba(148,163,184,.25);
+      display: grid; place-items: center;
+      overflow: hidden;
+    }
+    .brand-logo img{ width: 100%; height: 100%; object-fit: cover; }
+    .brand h1{
+      margin: 0; font-size: 1.15rem; font-weight: 800;
+      letter-spacing: .2px;
+    }
+    .brand p{ margin: 0; font-size: .8rem; color: var(--muted); }
+
+    .err{
+      background: rgba(248,113,113,.12);
+      border: 1px solid rgba(248,113,113,.35);
+      color: #fecaca;
+      padding: .55rem .7rem;
+      border-radius: 12px;
+      margin: .75rem 0 .5rem;
+      animation: shake .25s ease-in-out;
+    }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    form { margin-top: .5rem; display: grid; gap: .65rem; }
+
+    .field{
+      display: grid; gap: .35rem;
+    }
+    .label{
+      font-size: .8rem; color: var(--muted);
+    }
+    .control{
+      position: relative;
+    }
+    input{
+      width: 100%;
+      background: rgba(2,6,23,.45);
+      border: 1px solid rgba(148,163,184,.25);
+      color: var(--ink);
+      border-radius: 14px;
+      padding: .7rem .85rem;
+      font: inherit;
+      outline: none;
+      transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
+    }
+    input::placeholder{ color: rgba(226,232,240,.45); }
+    input:focus{
+      border-color: rgba(244,114,182,.6);
+      box-shadow: 0 0 0 3px rgba(244,114,182,.18);
+      background: rgba(2,6,23,.6);
+    }
+
+    .toggle-pass{
+      position: absolute; right: 10px; top: 50%;
+      transform: translateY(-50%);
+      background: transparent; border: 0; color: var(--muted);
+      cursor: pointer; padding: 4px; border-radius: 8px;
+    }
+    .toggle-pass:hover{ color: var(--ink); background: rgba(148,163,184,.12); }
+
+    .row{
+      display: flex; align-items: center; justify-content: space-between;
+      gap: .75rem; margin-top: .2rem;
+    }
+    .row a{ color: #38bdf8; text-decoration: none; font-size: .85rem; }
+    .row a:hover{ text-decoration: underline; }
+
+    .remember{
+      display: inline-flex; align-items: center; gap: .45rem;
+      color: var(--muted); font-size: .85rem;
+    }
+    .remember input[type="checkbox"]{
+      width: 16px; height: 16px; border-radius: 4px;
+      accent-color: var(--accent);
+    }
+
+    .btn{
+      appearance: none;
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: .5rem;
+      width: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      color: white;
+      border: none; border-radius: 12px;
+      padding: .7rem 1rem; font-weight: 800;
+      margin-top: .2rem;
+      cursor: pointer;
+      box-shadow: 0 10px 30px rgba(244,114,182,.25);
+      transition: transform .08s ease, filter .2s ease;
+    }
+    .btn:hover{ filter: brightness(1.05); }
+    .btn:active{ transform: translateY(1px); }
+    .btn[disabled]{ opacity: .6; cursor: not-allowed; }
+
+    .links{
+      margin-top: .75rem; text-align: center; font-size: .9rem; color: var(--muted);
+    }
+    .links a{ color: var(--accent); text-decoration: none; font-weight: 700; }
+    .links a:hover{ text-decoration: underline; }
+
+    /* small */
+    @media (max-width: 420px){
+      .wrap{ padding: 16px; }
+      .card{ padding: 18px 16px 14px; }
+    }
+
+    /* reduce motion */
+    @media (prefers-reduced-motion: reduce) {
+      .glow, .glow2 { animation: none; }
+      .btn, input { transition: none; }
+    }
   </style>
 </head>
 <body>
-  <div class="box">
-    <h2>Iniciar sesión</h2>
-    {% if error %}
-      <div class="err">{{ error }}</div>
-    {% endif %}
-    <form method="post">
-      <input name="username" placeholder="Usuario">
-      <input name="password" type="password" placeholder="Contraseña">
-      <button type="submit">Entrar</button>
-    </form>
-    <p><a href="{{ url_for('register') }}">Crear cuenta</a></p>
+  <div class="glow"></div>
+  <div class="glow2"></div>
+
+  <div class="wrap">
+    <div class="card">
+      <div class="brand">
+        <div class="brand-logo" aria-hidden="true">
+          <!-- usa tu logo si lo tienes en /static/logo.png -->
+          <img src="{{ url_for('static', filename='logo.png') }}" alt="">
+        </div>
+        <div>
+          <h1>BubuGame</h1>
+          <p>Bienvenido de vuelta 💖</p>
+        </div>
+      </div>
+
+      {% if error %}
+        <div class="err" role="alert">{{ error }}</div>
+      {% endif %}
+
+      <form method="post" novalidate>
+        <div class="field">
+          <label for="username" class="label">Usuario</label>
+          <div class="control">
+            <input id="username" name="username" placeholder="Tu usuario" autocomplete="username" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="password" class="label">Contraseña</label>
+          <div class="control">
+            <input id="password" name="password" type="password" placeholder="••••••••" autocomplete="current-password" required>
+            <button class="toggle-pass" type="button" aria-label="Mostrar u ocultar contraseña">👁️</button>
+          </div>
+        </div>
+
+        <div class="row">
+          <label class="remember">
+            <input type="checkbox" name="remember" value="1">
+            Recuérdame
+          </label>
+          <a href="{{ url_for('forgot') }}">¿Olvidaste tu contraseña?</a>
+        </div>
+
+        <button class="btn" type="submit" id="submitBtn">
+          <span>Entrar</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M5 12h14M13 5l7 7-7 7" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </form>
+
+      <div class="links">
+        ¿No tienes cuenta?
+        <a href="{{ url_for('register') }}">Crear cuenta</a>
+      </div>
+    </div>
   </div>
+
+  <script>
+    // Mostrar/Ocultar contraseña
+    const toggle = document.querySelector('.toggle-pass');
+    const pwd = document.getElementById('password');
+    toggle?.addEventListener('click', () => {
+      const isPwd = pwd.type === 'password';
+      pwd.type = isPwd ? 'text' : 'password';
+      toggle.textContent = isPwd ? '🙈' : '👁️';
+    });
+
+    // UX: deshabilitar botón al enviar
+    const form = document.querySelector('form');
+    const submitBtn = document.getElementById('submitBtn');
+    form?.addEventListener('submit', () => {
+      submitBtn.disabled = true;
+      submitBtn.style.filter = 'grayscale(.2)';
+    });
+
+    // Autofocus amable
+    const user = document.getElementById('username');
+    if (user && !user.value) user.focus();
+  </script>
 </body>
 </html>

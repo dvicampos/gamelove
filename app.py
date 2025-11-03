@@ -39,6 +39,18 @@ except Exception as e:
 def ping():
     return {"ok": True, "db": USE_DB}
 
+app.config['ASSETV'] = '20251103_01'  # por ejemplo
+
+@app.context_processor
+def inject_assetv():
+    return {'assetv': app.config.get('ASSETV', 'dev')}
+
+@app.after_request
+def no_cache_html(resp):
+    if resp.mimetype and "text/html" in resp.mimetype:
+        resp.headers["Cache-Control"] = "no-store"
+    return resp
+
 # =========================================================
 # LEADERBOARD
 # =========================================================
@@ -165,6 +177,83 @@ def register():
 def logout():
     session.clear()
     return redirect(url_for("login"))
+
+@app.route("/forgot", methods=["GET", "POST"])
+def forgot():
+    if not USE_DB or users_col is None or resets_col is None:
+        return render_template("forgot.html", error="Ahorita no hay conexión a la BD")
+
+    if request.method == "POST":
+        username = (request.form.get("username") or "").strip()
+        email_in = (request.form.get("email") or "").strip().lower()
+
+        # Buscar por username o email
+        user = None
+        if username:
+            user = users_col.find_one({"username": username})
+        elif email_in:
+            user = users_col.find_one({"email": email_in})
+
+        if not user:
+            return render_template("forgot.html", error="No encontramos ese usuario/correo 😢")
+
+        token = secrets.token_urlsafe(32)
+        resets_col.insert_one({
+            "user_id": user["_id"],
+            "token": token,
+            "created_at": datetime.utcnow(),
+            "expires_at": datetime.utcnow() + timedelta(hours=1),
+            "used": False
+        })
+
+        reset_url = url_for("reset_password", token=token, _external=True)
+
+        ok = False
+        if user.get("email"):
+            ok = send_reset_email(user["email"], reset_url, user.get("username",""))
+
+        if ok:
+            return render_template("forgot.html", message="Te mandamos el link al correo 💌")
+        else:
+            # Por si no hay SMTP, mostramos el link en pantalla para pruebas
+            return render_template("forgot.html", message="Copia este link para resetear:", reset_url=reset_url)
+
+    return render_template("forgot.html")
+
+
+# --- Reset de contraseña con token ---
+@app.route("/reset/<token>", methods=["GET", "POST"])
+def reset_password(token):
+    if not USE_DB or resets_col is None:
+        return render_template("reset.html", error="No hay BD disponible")
+
+    reset_doc = resets_col.find_one({"token": token})
+    if not reset_doc:
+        return render_template("reset.html", error="Link inválido")
+
+    if reset_doc.get("expires_at") and reset_doc["expires_at"] < datetime.utcnow():
+        return render_template("reset.html", error="El link ya caducó")
+
+    if reset_doc.get("used"):
+        return render_template("reset.html", error="Este link ya se usó")
+
+    if request.method == "POST":
+        password = request.form.get("password", "")
+        confirm = request.form.get("confirm", "")
+        if not password:
+            return render_template("reset.html", error="Pon una contraseña", token=token)
+        if password != confirm:
+            return render_template("reset.html", error="No coinciden", token=token)
+
+        users_col.update_one(
+            {"_id": reset_doc["user_id"]},
+            {"$set": {"password_hash": generate_password_hash(password)}}
+        )
+        resets_col.update_one({"_id": reset_doc["_id"]}, {"$set": {"used": True}})
+        return render_template("reset.html", message="¡Listo! Tu contraseña fue actualizada 💗")
+
+    # GET
+    return render_template("reset.html", token=token)
 
 # =========================================================
 # API SCORE (mejor puntaje)

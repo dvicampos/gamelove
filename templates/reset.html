@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Restablecer contraseña — BubuGame</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0f172a">
+  <style>
+    :root{
+      --bg: radial-gradient(circle at 30% -10%, #0f172a 0%, #0b1228 40%, #020617 70%, #000 100%);
+      --card: rgba(15,23,42,.45);
+      --stroke: rgba(148,163,184,.28);
+      --ink: #e2e8f0; --muted: #94a3b8; --accent: #f472b6;
+      --radius: 18px; --shadow: 0 18px 50px rgba(244,114,182,.18);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: var(--bg); color: var(--ink);
+      display:grid; place-items:center;
+    }
+    .wrap{ width:min(420px, 92vw); padding:24px; }
+    .card{
+      background: var(--card); border:1px solid var(--stroke);
+      border-radius: var(--radius); box-shadow: var(--shadow);
+      backdrop-filter: blur(14px); padding: 20px 20px 18px;
+    }
+    h1{margin:.2rem 0 .6rem; font-size:1.15rem}
+    label{font-size:.85rem; color:var(--muted)}
+    input{
+      width:100%; background: rgba(2,6,23,.45); color:var(--ink);
+      border:1px solid rgba(148,163,184,.25); border-radius:14px;
+      padding:.7rem .85rem; outline:none; margin:.35rem 0 .6rem;
+    }
+    input:focus{border-color: rgba(244,114,182,.6); box-shadow:0 0 0 3px rgba(244,114,182,.18);}
+    .btn{
+      width:100%; border:0; border-radius:12px;
+      background: linear-gradient(90deg, #f472b6, #fb7185);
+      color:white; font-weight:800; padding:.7rem 1rem; cursor:pointer;
+      box-shadow: 0 10px 30px rgba(244,114,182,.25);
+    }
+    .err{
+      background: rgba(248,113,113,.12);
+      border: 1px solid rgba(248,113,113,.35);
+      color: #fecaca; padding:.55rem .7rem; border-radius:12px; margin:.6rem 0;
+    }
+    .ok{
+      background: rgba(34,197,94,.12);
+      border: 1px solid rgba(34,197,94,.35);
+      color: #bbf7d0; padding:.55rem .7rem; border-radius:12px; margin:.6rem 0;
+    }
+    a{color:#f472b6; text-decoration:none}
+    .links{margin-top:.7rem; text-align:center; color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Restablecer contraseña</h1>
+
+      {% if error %}<div class="err" role="alert">{{ error }}</div>{% endif %}
+      {% if message %}
+        <div class="ok">{{ message }}</div>
+        <div class="links"><a href="{{ url_for('login') }}">Iniciar sesión</a></div>
+      {% else %}
+        <form method="post">
+          <label for="password">Nueva contraseña</label>
+          <input id="password" name="password" type="password" placeholder="Mínimo 6 caracteres" required>
+          <label for="confirm">Confirmar contraseña</label>
+          <input id="confirm" name="confirm" type="password" placeholder="Repite la contraseña" required>
+          <button class="btn" type="submit">Actualizar</button>
+        </form>
+        <div class="links"><a href="{{ url_for('login') }}">Cancelar</a></div>
+      {% endif %}
+    </div>
+  </div>
+</body>
+</html>
