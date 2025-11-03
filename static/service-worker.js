@@ -1,4 +1,4 @@
-const CACHE_NAME = "match3-v1";
+const CACHE_NAME = "bubugame-v1";
 const ASSETS = [
   "/",
   "/static/style.css",
