@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Match 3 💗</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/service-worker.js");
+    }
+  </script>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="title-block">
+        <h1>Match 3 💖</h1>
+        <small>Hola, {{ username }}</small>
+      </div>
+      <div class="hud">
+        <div class="level-box" id="level-box">Nivel: <span id="level">1</span></div>
+        <div class="score-box">
+          Puntos: <span id="score">0</span>
+        </div>
+        <a href="{{ url_for('logout') }}" class="btn-ghost">Salir</a>
+      </div>
+    </header>
+
+    <main class="game-wrap">
+      <div id="board" class="board" aria-label="Tablero de dulces"></div>
+    </main>
+
+    <footer class="footer-links">
+      <a href="{{ url_for('leaderboard') }}">🏆 Ver ranking</a>
+      <span class="mini">Para mi bubucita💗</span>
+    </footer>
+  </div>
+
+  <!-- overlay de festejo -->
+  <div id="celebrate" class="celebrate hidden">
+    <div class="celebrate-box">
+      <p class="celebrate-title">¡Combo hermoso! ✨</p>
+      <p class="celebrate-sub">Eres la mejor mi bubucita 💕</p>
+    </div>
+    <div class="confetti"></div>
+  </div>
+
+  <!-- toast de nivel -->
+  <div id="level-toast" class="level-toast hidden">
+    <div class="level-toast-body">
+      <span id="level-toast-text">Nivel 2 💗</span>
+    </div>
+  </div>
+
+  <!-- audios -->
+  <audio id="sfx-match" src="{{ url_for('static', filename='sounds/match.mp3') }}" preload="auto"></audio>
+  <audio id="sfx-invalid" src="{{ url_for('static', filename='sounds/invalid.mp3') }}" preload="auto"></audio>
+  <audio id="sfx-level" src="{{ url_for('static', filename='sounds/level.mp3') }}" preload="auto"></audio>
+
+  <script src="{{ url_for('static', filename='game.js') }}"></script>
+</body>
+</html>
