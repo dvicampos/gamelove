@@ -9,11 +9,9 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <!-- Favicon clásico -->
   <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
-
   <!-- Si quieres usar tu logo.png -->
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo.png') }}">
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='logo.png') }}">
-
 </head>
 <body>
   <!-- overlay de festejo -->
@@ -45,6 +43,10 @@
         <div class="score-box">
           Mejor: <span id="best">{{ best_score }}</span>
         </div>
+        <!-- botón de ayuda -->
+        <button id="openHelp" class="btn-help" type="button" aria-label="Instrucciones">
+          ?
+        </button>
         <a href="{{ url_for('logout') }}" class="btn-ghost">Salir</a>
       </div>
     </div>
@@ -68,6 +70,22 @@
       </button>
     </div>
   </div>
+
+  <!-- ===== MODAL DE INSTRUCCIONES ===== -->
+  <div id="helpModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-backdrop" data-close="true"></div>
+    <div class="modal-body" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <button class="modal-close" type="button" data-close="true">✕</button>
+      <h2 id="modal-title">¿Cómo jugar? 💖</h2>
+      <p>1. Arrastra una fichita para intercambiarla con la de al lado (arriba, abajo, izquierda o derecha).</p>
+      <p>2. Si formas <strong>3 o más iguales</strong> en línea, desaparecen y te damos puntos.</p>
+      <p>3. Si haces 4 o más juntas, hay <strong>combo bubucita</strong> ✨</p>
+      <p>4. Al juntar más puntos, subes de nivel. Tu mejor puntaje se guarda.</p>
+      <p style="opacity:.65;font-size:.8rem;">Tip: en cel también puedes arrastrar, solo toca y desliza suave 💗</p>
+      <button type="button" class="btn-primary" data-close="true">¡Listo, a jugar! 🧸</button>
+    </div>
+  </div>
+  <!-- ===== /MODAL ===== -->
 
   <!-- audios opcionales -->
   <audio id="sfx-match" src="" preload="auto"></audio>
@@ -103,6 +121,38 @@
     window.addEventListener("appinstalled", () => {
       if (installBtn) installBtn.textContent = "✅ Instalado";
     });
+
+    // ====== MODAL INSTRUCCIONES ======
+    const openHelp = document.getElementById("openHelp");
+    const helpModal = document.getElementById("helpModal");
+
+    function openModal() {
+      if (!helpModal) return;
+      helpModal.classList.remove("hidden");
+      helpModal.setAttribute("aria-hidden", "false");
+    }
+    function closeModal() {
+      if (!helpModal) return;
+      helpModal.classList.add("hidden");
+      helpModal.setAttribute("aria-hidden", "true");
+    }
+
+    openHelp?.addEventListener("click", openModal);
+
+    // cerrar por backdrop o botón con data-close
+    helpModal?.addEventListener("click", (e) => {
+      if (e.target.dataset.close === "true") {
+        closeModal();
+      }
+    });
+
+    // cerrar con ESC
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeModal();
+    });
+
+    // opcional: mostrar la primera vez
+    // openModal();
   </script>
 
   <!-- tu juego -->

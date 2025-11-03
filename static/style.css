@@ -272,3 +272,99 @@ body {
     transition-duration: .01ms !important;
   }
 }
+/* ====== BOTÓN DE AYUDA ====== */
+.btn-help {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid rgba(248,113,113,.4);
+  background: rgba(248,113,113,.12);
+  color: #ffe4e6;
+  font-weight: 700;
+  font-size: .7rem;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: .12s ease-out;
+}
+.btn-help:hover {
+  background: rgba(248,113,113,.25);
+}
+
+/* ====== MODAL INSTRUCCIONES ====== */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  transition: opacity .18s ease-out, visibility .18s ease-out;
+}
+.modal.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(2,6,23,.75);
+  backdrop-filter: blur(3px);
+}
+.modal-body {
+  position: relative;
+  width: min(92vw, 420px);
+  background: radial-gradient(circle, rgba(15,23,42,.8), rgba(2,6,23,.85));
+  border: 1px solid rgba(248,113,113,.35);
+  border-radius: 18px;
+  padding: 1.2rem 1.3rem 1.1rem;
+  box-shadow: 0 18px 50px rgba(0,0,0,.35);
+  animation: modal-pop .22s ease-out;
+}
+@keyframes modal-pop {
+  from { transform: translateY(12px) scale(.97); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+.modal-body h2 {
+  margin-top: 0;
+  font-size: 1.05rem;
+  margin-bottom: .55rem;
+}
+.modal-body p {
+  margin: .35rem 0;
+  font-size: .8rem;
+  line-height: 1.35;
+}
+.modal-close {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid rgba(248,113,113,.4);
+  background: rgba(248,113,113,.12);
+  color: #ffe4e6;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.btn-primary {
+  width: 100%;
+  background: linear-gradient(120deg, #f472b6, #f97316);
+  border: none;
+  border-radius: 999px;
+  padding: .55rem 1rem;
+  color: #fff;
+  font-weight: 600;
+  font-size: .75rem;
+  margin-top: .75rem;
+  cursor: pointer;
+  text-align: center;
+}
+@media (max-width: 460px) {
+  .modal-body {
+    width: min(100vw, 480px);
+    margin: 0 1rem;
+  }
+}
