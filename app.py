@@ -23,7 +23,7 @@ resets_col = None
 
 try:
     from flask_pymongo import PyMongo
-    app.config["MONGO_URI"] = "mongodb+srv://david:ARno0192@cluster0.runro.mongodb.net/app_pymes?retryWrites=true&w=majority&appName=Cluster0"
+    app.config["MONGO_URI"] = "mongodb+srv://david:ARno0192@cluster0.runro.mongodb.net/amorgame?retryWrites=true&w=majority&appName=Cluster0"
     mongo = PyMongo(app)
     users_col = mongo.db.users
     scores_col = mongo.db.scores
