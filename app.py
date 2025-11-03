@@ -21,8 +21,25 @@ scores_col = mongo.db.scores
 def index():
     if "user_id" not in session:
         return redirect(url_for("login"))
-    return render_template("index.html", username=session.get("username"))
 
+    uid = ObjectId(session["user_id"])
+    user = users_col.find_one({"_id": uid})
+
+    # mejor puntaje (por si lo quieres mostrar)
+    best = scores_col.find_one({"user_id": uid}, sort=[("points", -1)])
+    best_score = best["points"] if best else 0
+
+    # progreso actual (lo que queremos)
+    current_score = user.get("current_score", 0) if user else 0
+    current_level = user.get("current_level", 1) if user else 1
+
+    return render_template(
+        "index.html",
+        username=user["username"],
+        best_score=best_score,
+        current_score=current_score,
+        current_level=current_level,
+    )
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -77,15 +94,23 @@ def api_score():
 
     data = request.get_json() or {}
     points = int(data.get("points", 0))
+    uid = ObjectId(session["user_id"])
 
+    # ver el mejor que ya tiene
+    best = scores_col.find_one({"user_id": uid}, sort=[("points", -1)])
+
+    if best and best["points"] >= points:
+        # no es mejor, no lo guardo
+        return jsonify({"ok": True, "saved": False, "points": points})
+
+    # sí es mejor, lo guardo
     scores_col.insert_one({
-        "user_id": ObjectId(session["user_id"]),
+        "user_id": uid,
         "points": points,
         "created_at": datetime.utcnow()
     })
 
-    return jsonify({"ok": True, "points": points})
-
+    return jsonify({"ok": True, "saved": True, "points": points})
 
 # ====== LEADERBOARD ======
 @app.route("/leaderboard")
@@ -110,6 +135,31 @@ def leaderboard():
 
     return render_template("leaderboard.html", rows=rows)
 
+@app.route("/api/progress", methods=["POST"])
+def api_progress():
+    if "user_id" not in session:
+        return jsonify({"ok": False, "error": "not_authenticated"}), 401
+
+    data = request.get_json() or {}
+    current_score = int(data.get("score", 0))
+    current_level = int(data.get("level", 1))
+
+    uid = ObjectId(session["user_id"])
+
+    # actualizamos el user con su progreso actual
+    mongo.db.users.update_one(
+        {"_id": uid},
+        {
+            "$set": {
+                "current_score": current_score,
+                "current_level": current_level,
+                "progress_updated_at": datetime.utcnow(),
+            }
+        },
+        upsert=False,
+    )
+
+    return jsonify({"ok": True})
 
 # ====== PWA ======
 @app.route("/manifest.json")

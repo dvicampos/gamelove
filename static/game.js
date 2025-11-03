@@ -1,6 +1,8 @@
+// ====== ELEMENTOS ======
 const board = document.getElementById("board");
 const scoreEl = document.getElementById("score");
 const levelEl = document.getElementById("level");
+const bestEl = document.getElementById("best");
 const levelBox = document.getElementById("level-box");
 
 const sfxMatch = document.getElementById("sfx-match");
@@ -11,21 +13,25 @@ const celebrateEl = document.getElementById("celebrate");
 const levelToast = document.getElementById("level-toast");
 const levelToastText = document.getElementById("level-toast-text");
 
-// emojis cute
+// ====== CONFIG ======
+// emojis cute que pediste 🧸, perrito, tulipán, pintura, corazón, nota musical
 const emojis = ["🧸", "🐶", "🌷", "🎨", "❤️", "🎵"];
 const rows = 8;
 const cols = 8;
 const candyTypes = emojis.length;
 
+// ====== ESTADO ======
+// IMPORTANTE: arrancamos leyendo lo que trajo Flask
+let score = Number(scoreEl?.textContent || 0);
+let level = Number(levelEl?.textContent || 1);
+let lastSentScore = score; // para no disparar /api/score apenas arranca
+
 let grid = [];
 let tiles = [];
-let score = 0;
-let level = 1;
-let lastSentScore = 0;
 let dragged = null;
 let target = null;
 
-// ----- helpers UI -----
+// ====== UTILS ======
 function playSafe(audio) {
   if (!audio) return;
   audio.play().catch(() => {});
@@ -48,8 +54,9 @@ function showLevelToastUI(lvl) {
   }, 1400);
 }
 
-// ----- niveles -----
+// ====== NIVELES ======
 function getLevelByScore(points) {
+  // puedes modificar las metas aquí
   if (points >= 1500) return 5;
   if (points >= 1000) return 4;
   if (points >= 600) return 3;
@@ -61,7 +68,7 @@ function maybeLevelUp() {
   const newLevel = getLevelByScore(score);
   if (newLevel !== level) {
     level = newLevel;
-    levelEl.textContent = level;
+    if (levelEl) levelEl.textContent = level;
     if (levelBox) {
       levelBox.classList.remove("level-pop");
       void levelBox.offsetWidth;
@@ -69,10 +76,43 @@ function maybeLevelUp() {
     }
     playSafe(sfxLevel);
     showLevelToastUI(level);
+    // guardamos el progreso porque subió de nivel
+    saveProgress(score, level);
   }
 }
 
-// ----- tablero -----
+// ====== PROGRESO (guardar en backend) ======
+async function saveProgress(score, level) {
+  try {
+    await fetch("/api/progress", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ score, level }),
+    });
+  } catch (err) {
+    console.log("No se pudo guardar progreso:", err);
+  }
+}
+
+// ====== SCORE (ranking) ======
+async function sendScore(points) {
+  try {
+    const res = await fetch("/api/score", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ points }),
+    });
+    const data = await res.json();
+    // si tu backend está en modo "solo guardo si es mejor"
+    if (data.saved && bestEl) {
+      bestEl.textContent = points;
+    }
+  } catch (err) {
+    console.log("No se pudo enviar puntaje (offline?):", err);
+  }
+}
+
+// ====== TABLERO ======
 function randomCandy() {
   return Math.floor(Math.random() * candyTypes);
 }
@@ -111,23 +151,21 @@ function createBoard() {
     }
   }
 
+  // limpiar matches iniciales
   setTimeout(removeMatches, 150);
 }
 
-// ----- drag & drop -----
+// ====== DRAG & DROP ======
 function onDragStart(e) {
   dragged = e.target;
   dragged.classList.add("is-dragging");
 }
-
 function onDragOver(e) {
   e.preventDefault();
 }
-
 function onDrop(e) {
   target = e.target;
 }
-
 function onDragEnd(e) {
   if (dragged) dragged.classList.remove("is-dragging");
   if (!dragged || !target) {
@@ -156,7 +194,7 @@ function onDragEnd(e) {
 
   const matched = findMatches();
   if (matched.length === 0) {
-    // revert
+    // no sirvió, lo regreso
     swap(r1, c1, r2, c2);
     playSafe(sfxInvalid);
   } else {
@@ -168,8 +206,10 @@ function onDragEnd(e) {
 }
 
 function swap(r1, c1, r2, c2) {
+  // datos
   [grid[r1][c1], grid[r2][c2]] = [grid[r2][c2], grid[r1][c1]];
 
+  // DOM
   const t1 = tiles[r1][c1];
   const t2 = tiles[r2][c2];
 
@@ -185,7 +225,7 @@ function swap(r1, c1, r2, c2) {
   t2.dataset.val = val2;
 }
 
-// ----- matches -----
+// ====== MATCHES ======
 function findMatches() {
   const toRemove = [];
 
@@ -240,24 +280,31 @@ function removeMatches() {
   const matches = findMatches();
   if (matches.length === 0) return;
 
-  // sonido match
+  // sonido de match
   playSafe(sfxMatch);
 
-  // si es un buen combo (4 o más) hacemos festejo
+  // festejo si es un combo grande
   if (matches.length >= 4) {
     showCelebrate();
   }
 
+  // sumamos puntos
   score += matches.length * 10;
-  scoreEl.textContent = score;
+  if (scoreEl) scoreEl.textContent = score;
+
+  // checar nivel
   maybeLevelUp();
 
+  // guardar progreso SIEMPRE que sumemos puntos
+  saveProgress(score, level);
+
+  // mandar al ranking solo cada 100 pts para no spamear
   if (score - lastSentScore >= 100) {
     sendScore(score);
     lastSentScore = score;
   }
 
-  // marcar como null en grid + animar
+  // marcar como null y animar
   matches.forEach(({ r, c }) => {
     grid[r][c] = null;
     const tile = tiles[r][c];
@@ -266,14 +313,16 @@ function removeMatches() {
 
   setTimeout(() => {
     collapseAndRefill();
+    // por si se generan nuevos matches
     setTimeout(removeMatches, 160);
   }, 260);
 }
 
-// colapso por columna (bueno)
+// colapso por columna (bueno, sin fichas raras)
 function collapseAndRefill() {
   for (let c = 0; c < cols; c++) {
     const col = [];
+    // recolectar de abajo hacia arriba
     for (let r = rows - 1; r >= 0; r--) {
       if (grid[r][c] !== null) {
         col.push(grid[r][c]);
@@ -281,6 +330,7 @@ function collapseAndRefill() {
     }
 
     let rIdx = rows - 1;
+    // poner los que sí había
     for (let v of col) {
       grid[rIdx][c] = v;
       const tile = tiles[rIdx][c];
@@ -290,6 +340,7 @@ function collapseAndRefill() {
       rIdx--;
     }
 
+    // rellenar lo que falta
     while (rIdx >= 0) {
       const newVal = randomCandy();
       grid[rIdx][c] = newVal;
@@ -302,16 +353,5 @@ function collapseAndRefill() {
   }
 }
 
-async function sendScore(points) {
-  try {
-    await fetch("/api/score", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ points }),
-    });
-  } catch (err) {
-    console.log("No se pudo enviar puntaje:", err);
-  }
-}
-
+// ====== INIT ======
 createBoard();

@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Match 3 💗</title>
+  <title>Match 3 💖</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link rel="manifest" href="/manifest.json" />
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
@@ -20,9 +20,15 @@
         <small>Hola, {{ username }}</small>
       </div>
       <div class="hud">
-        <div class="level-box" id="level-box">Nivel: <span id="level">1</span></div>
+        <!-- nivel y puntaje que VIENEN de Flask -->
+        <div class="level-box" id="level-box">
+          Nivel: <span id="level">{{ current_level or 1 }}</span>
+        </div>
         <div class="score-box">
-          Puntos: <span id="score">0</span>
+          Puntos: <span id="score">{{ current_score or 0 }}</span>
+        </div>
+        <div class="score-box soft">
+          Mejor: <span id="best">{{ best_score or 0 }}</span>
         </div>
         <a href="{{ url_for('logout') }}" class="btn-ghost">Salir</a>
       </div>
@@ -34,7 +40,7 @@
 
     <footer class="footer-links">
       <a href="{{ url_for('leaderboard') }}">🏆 Ver ranking</a>
-      <span class="mini">Para mi bubucita💗</span>
+      <span class="mini">BubuGame💗</span>
     </footer>
   </div>
 
@@ -54,7 +60,7 @@
     </div>
   </div>
 
-  <!-- audios -->
+  <!-- audios (ponlos en static/sounds) -->
   <audio id="sfx-match" src="{{ url_for('static', filename='sounds/match.mp3') }}" preload="auto"></audio>
   <audio id="sfx-invalid" src="{{ url_for('static', filename='sounds/invalid.mp3') }}" preload="auto"></audio>
   <audio id="sfx-level" src="{{ url_for('static', filename='sounds/level.mp3') }}" preload="auto"></audio>
