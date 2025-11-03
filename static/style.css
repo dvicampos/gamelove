@@ -1,9 +1,8 @@
 :root {
   --bg: radial-gradient(circle at top, #0f172a 0%, #020617 55%, #000 100%);
-  --tile-size: 62px;
+  --tile-size: 62px;            /* tamaño base desktop */
   --radius: 18px;
   --accent: #f472b6;
-  --pink: #fda4af;
   --ink: #e2e8f0;
 }
 
@@ -23,10 +22,12 @@ body {
   color: var(--ink);
 }
 
+/* contenedor app */
 .app {
-  width: min(92vw, 460px);
+  width: min(94vw, 460px);
 }
 
+/* ====== TOPBAR / HUD ====== */
 .topbar {
   display: flex;
   justify-content: space-between;
@@ -42,7 +43,7 @@ body {
 }
 
 .title-block h1 {
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   margin: 0;
 }
 .title-block small {
@@ -54,6 +55,7 @@ body {
   display: flex;
   gap: .35rem;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .score-box,
@@ -65,6 +67,15 @@ body {
   font-weight: 600;
   font-size: .7rem;
   white-space: nowrap;
+}
+
+.level-pop {
+  animation: levelPulse .46s ease-out;
+}
+@keyframes levelPulse {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.08); }
+  100% { transform: scale(1); }
 }
 
 .btn-ghost {
@@ -81,21 +92,23 @@ body {
   background: rgba(248,113,113,.25);
 }
 
+/* ====== TABLERO ====== */
 .board {
-  width: calc(var(--tile-size) * 8);
-  height: calc(var(--tile-size) * 8);
+  /* que no se pase del viewport */
+  width: min(calc(var(--tile-size) * 8 + 20px), 92vw);
+  aspect-ratio: 1 / 1;             /* cuadrado siempre */
   display: grid;
-  grid-template-columns: repeat(8, var(--tile-size));
+  grid-template-columns: repeat(8, 1fr);
   gap: 7px;
   background: radial-gradient(circle, rgba(15,23,42,.2), rgba(15,23,42,.05));
   border: 1px solid rgba(148, 163, 184, 0.2);
   border-radius: 24px;
   padding: 10px;
+  position: relative;
+  overflow: hidden;
   box-shadow:
     0 20px 45px rgba(0,0,0,.35),
     inset 0 1px 0 rgba(255,255,255,.05);
-  position: relative;
-  overflow: hidden;
 }
 
 .board::before,
@@ -109,8 +122,7 @@ body {
 }
 
 .tile {
-  width: var(--tile-size);
-  height: var(--tile-size);
+  aspect-ratio: 1 / 1;
   border-radius: 18px;
   background: rgba(15, 23, 42, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.05);
@@ -118,12 +130,13 @@ body {
   display: grid;
   place-items: center;
   font-weight: 700;
-  font-size: 1.6rem;
+  font-size: clamp(1.2rem, 3.5vw, 1.6rem);
   color: #ffffff;
   transition: transform .12s ease-out, box-shadow .12s ease-out;
   user-select: none;
   backdrop-filter: blur(6px);
   box-shadow: 0 8px 16px rgba(0,0,0,.2);
+  touch-action: none;  /* 👈 ayuda en móvil */
 }
 
 .tile:active {
@@ -136,7 +149,7 @@ body {
   z-index: 10;
 }
 
-/* fondos bonitos */
+/* ====== FONDOS POR CANDY ====== */
 .b-0 { background: radial-gradient(circle, #f9731640, #0f172a55); }
 .b-1 { background: radial-gradient(circle, #0ea5e940, #0f172a55); }
 .b-2 { background: radial-gradient(circle, #a855f740, #0f172a55); }
@@ -144,43 +157,27 @@ body {
 .b-4 { background: radial-gradient(circle, #22c55e40, #0f172a55); }
 .b-5 { background: radial-gradient(circle, #facc1540, #0f172a55); }
 
+/* ====== ANIMS ====== */
 @keyframes pop-out {
   0% { transform: scale(1); opacity: 1; }
-  70% { transform: scale(1.35); opacity: .6; }
-  100% { transform: scale(0); opacity: 0; }
+  70% { transform: scale(1.3); opacity: .7; }
+  100% { transform: scale(.15); opacity: 0; }
 }
-
 .tile.boom {
-  animation: pop-out .35s ease-out forwards;
+  animation: pop-out .28s ease-out forwards;
+  will-change: transform, opacity;
 }
 
 @keyframes fall-in {
-  from { transform: translateY(-18px); opacity: 0; }
+  from { transform: translateY(-14px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
-
 .tile.fall {
-  animation: fall-in .25s ease-out;
+  animation: fall-in .22s ease-out;
+  will-change: transform, opacity;
 }
 
-/* footer */
-.footer-links {
-  margin-top: 1rem;
-  display: flex;
-  gap: .7rem;
-  align-items: center;
-  justify-content: space-between;
-  font-size: .75rem;
-}
-.footer-links a {
-  color: #38bdf8;
-  text-decoration: none;
-}
-.footer-links .mini {
-  opacity: .6;
-}
-
-/* -------- Festejo overlay -------- */
+/* ====== OVERLAYS ====== */
 .celebrate {
   position: fixed;
   inset: 0;
@@ -204,36 +201,11 @@ body {
   backdrop-filter: blur(8px);
   animation: celebrate-pop .45s ease-out;
 }
-.celebrate-title {
-  font-size: 1.1rem;
-  margin-bottom: .35rem;
-}
-.celebrate-sub {
-  font-size: .8rem;
-  opacity: .7;
-}
 @keyframes celebrate-pop {
   from { transform: scale(.6); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
 }
 
-/* confeti corazones */
-.confetti::before,
-.confetti::after {
-  content: "💗 💖 💕 💓";
-  position: absolute;
-  left: 50%;
-  top: 0;
-  transform: translateX(-50%);
-  font-size: 1.7rem;
-  animation: hearts-fall 1.4s linear infinite;
-}
-@keyframes hearts-fall {
-  0% { transform: translate(-50%, -20px) rotate(0); opacity: 1; }
-  100% { transform: translate(-50%, 160px) rotate(15deg); opacity: 0; }
-}
-
-/* -------- Toast de nivel -------- */
 .level-toast {
   position: fixed;
   top: 14px;
@@ -255,48 +227,48 @@ body {
   box-shadow: 0 14px 45px rgba(244,114,182,.35);
 }
 
-@media (max-width: 460px) {
+/* ====== FOOTER ====== */
+.footer-links {
+  margin-top: 1rem;
+  display: flex;
+  gap: .7rem;
+  align-items: center;
+  justify-content: space-between;
+  font-size: .75rem;
+}
+.footer-links a {
+  color: #38bdf8;
+  text-decoration: none;
+}
+.footer-links .mini {
+  opacity: .6;
+}
+
+/* ====== MÓVIL CHICO ====== */
+@media (max-width: 420px) {
   :root {
     --tile-size: 50px;
   }
-  .app {
-    width: 100%;
-    display: grid;
-    place-items: center;
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
   }
-  .hud {
-    flex-wrap: wrap;
-    justify-content: flex-end;
+  .board {
+    gap: 4px;
+    padding: 6px;
   }
-  .btn-ghost {
-    order: 2;
+  .tile {
+    border-radius: 14px;
   }
-}
-.btn-install {
-  background: rgba(56, 189, 248, .15);
-  border: 1px solid rgba(56, 189, 248, .5);
-  border-radius: 999px;
-  padding: .3rem .8rem;
-  color: #e2e8f0;
-  font-size: .7rem;
-  cursor: pointer;
-  transition: .12s ease-out;
-}
-.btn-install:hover {
-  background: rgba(56, 189, 248, .3);
 }
 
-.ios-hint {
-  position: fixed;
-  bottom: 14px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(2,6,23,.85);
-  border: 1px solid rgba(248,113,113,.45);
-  border-radius: 16px;
-  padding: .5rem .9rem;
-  font-size: .7rem;
-  backdrop-filter: blur(6px);
-  color: #f8fafc;
-  z-index: 50;
+/* ====== REDUCIR MOVIMIENTO ====== */
+@media (prefers-reduced-motion: reduce) {
+  .tile,
+  .tile.boom,
+  .tile.fall {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
 }

@@ -54,7 +54,6 @@ function sfxMoveBad() {
 // =====================================================
 const board = document.getElementById("board");
 if (!board) {
-  // no estamos en la vista del juego
   console.warn("No hay #board en este template");
 }
 
@@ -71,7 +70,9 @@ const celebrateEl = document.getElementById("celebrate");
 const levelToast = document.getElementById("level-toast");
 const levelToastText = document.getElementById("level-toast-text");
 
-// emojis
+// =====================================================
+// CONFIG
+// =====================================================
 const emojis = ["🧸", "🐶", "🌷", "🎨", "❤️", "🎵"];
 const rows = 8;
 const cols = 8;
@@ -87,6 +88,9 @@ let tiles = [];
 let dragged = null;
 let target = null;
 
+// =====================================================
+// UTILS UI
+// =====================================================
 function playSafe(audioEl, fallbackFn) {
   if (audioEl) {
     audioEl.currentTime = 0;
@@ -109,6 +113,9 @@ function showLevelToastUI(lvl) {
   setTimeout(() => levelToast.classList.add("hidden"), 1400);
 }
 
+// =====================================================
+// NIVELES
+// =====================================================
 function getLevelByScore(points) {
   if (points >= 1500) return 5;
   if (points >= 1000) return 4;
@@ -133,6 +140,9 @@ function maybeLevelUp() {
   }
 }
 
+// =====================================================
+// PROGRESO BACKEND (tolerante)
+// =====================================================
 async function saveProgress(score, level) {
   try {
     await fetch("/api/progress", {
@@ -141,7 +151,7 @@ async function saveProgress(score, level) {
       body: JSON.stringify({ score, level }),
     });
   } catch (err) {
-    console.log("No se pudo guardar progreso:", err);
+    // si no existe ruta, no pasa nada
   }
 }
 
@@ -161,8 +171,55 @@ async function sendScore(points) {
   }
 }
 
+// =====================================================
+// TABLERO
+// =====================================================
 function randomCandy() {
   return Math.floor(Math.random() * candyTypes);
+}
+
+function attachTouch(tile) {
+  let startX = 0, startY = 0;
+
+  tile.addEventListener("touchstart", (e) => {
+    const t = e.touches[0];
+    startX = t.clientX;
+    startY = t.clientY;
+    dragged = tile;
+    tile.classList.add("is-dragging");
+  }, { passive: true });
+
+  tile.addEventListener("touchend", (e) => {
+    tile.classList.remove("is-dragging");
+    if (!dragged) return;
+
+    const t = e.changedTouches[0];
+    const dx = t.clientX - startX;
+    const dy = t.clientY - startY;
+
+    let targetRow = Number(tile.dataset.row);
+    let targetCol = Number(tile.dataset.col);
+
+    if (Math.abs(dx) > Math.abs(dy)) {
+      if (dx > 15) targetCol += 1;
+      else if (dx < -15) targetCol -= 1;
+    } else {
+      if (dy > 15) targetRow += 1;
+      else if (dy < -15) targetRow -= 1;
+    }
+
+    if (
+      targetRow >= 0 && targetRow < rows &&
+      targetCol >= 0 && targetCol < cols
+    ) {
+      target = tiles[targetRow][targetCol];
+      onDragEnd({}); // reusar lógica
+    } else {
+      playSafe(sfxInvalid, sfxMoveBad);
+      dragged = null;
+      target = null;
+    }
+  });
 }
 
 function createTile(r, c, val) {
@@ -174,10 +231,14 @@ function createTile(r, c, val) {
   div.draggable = true;
   div.textContent = emojis[val];
 
+  // drag
   div.addEventListener("dragstart", onDragStart);
   div.addEventListener("dragover", onDragOver);
   div.addEventListener("drop", onDrop);
   div.addEventListener("dragend", onDragEnd);
+
+  // touch
+  attachTouch(div);
 
   return div;
 }
@@ -200,9 +261,13 @@ function createBoard() {
     }
   }
 
+  // limpiar matches iniciales
   setTimeout(removeMatches, 150);
 }
 
+// =====================================================
+// DRAG & DROP
+// =====================================================
 function onDragStart(e) {
   dragged = e.target;
   dragged.classList.add("is-dragging");
@@ -252,6 +317,9 @@ function onDragEnd(e) {
   target = null;
 }
 
+// =====================================================
+// SWAP
+// =====================================================
 function swap(r1, c1, r2, c2) {
   [grid[r1][c1], grid[r2][c2]] = [grid[r2][c2], grid[r1][c1]];
 
@@ -270,6 +338,9 @@ function swap(r1, c1, r2, c2) {
   t2.dataset.val = val2;
 }
 
+// =====================================================
+// BUSCAR MATCHES
+// =====================================================
 function findMatches() {
   const toRemove = [];
 
@@ -320,6 +391,9 @@ function findMatches() {
   return toRemove;
 }
 
+// =====================================================
+// ELIMINAR MATCHES
+// =====================================================
 function removeMatches() {
   const matches = findMatches();
   if (matches.length === 0) return;
@@ -330,6 +404,7 @@ function removeMatches() {
     showCelebrate();
   }
 
+  // sumar puntos
   score += matches.length * 10;
   if (scoreEl) scoreEl.textContent = score;
 
@@ -341,18 +416,31 @@ function removeMatches() {
     lastSentScore = score;
   }
 
-  matches.forEach(({ r, c }) => {
+  // animación escalonada
+  matches.forEach(({ r, c }, idx) => {
     grid[r][c] = null;
     const tile = tiles[r][c];
+    tile.style.animationDelay = (idx * 25) + "ms";
     tile.classList.add("boom");
   });
 
   setTimeout(() => {
     collapseAndRefill();
-    setTimeout(removeMatches, 160);
+
+    // checar si se generaron nuevos matches
+    setTimeout(() => {
+      const more = findMatches();
+      if (more.length > 0) {
+        removeMatches();
+      }
+    }, 160);
+
   }, 260);
 }
 
+// =====================================================
+// COLAPSO / REFILL
+// =====================================================
 function collapseAndRefill() {
   for (let c = 0; c < cols; c++) {
     const col = [];
@@ -384,7 +472,9 @@ function collapseAndRefill() {
   }
 }
 
-// init
+// =====================================================
+// INIT
+// =====================================================
 if (board) {
   createBoard();
 }
