@@ -1,74 +1,28 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-
 <head>
-    <meta charset="UTF-8">
-    <title>Leaderboard</title>
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <link rel="manifest" href="/manifest.json">
-    <script>
-        if ("serviceWorker" in navigator) {
-            navigator.serviceWorker.register("/service-worker.js");
-        }
-    </script>
-    <style>
-        body {
-            background: #020617;
-            color: #e2e8f0;
-            font-family: system-ui;
-            min-height: 100vh;
-            margin: 0;
-            padding: 1.5rem
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: rgba(15, 23, 42, .25);
-            border-radius: 16px;
-            overflow: hidden
-        }
-
-        th,
-        td {
-            padding: .65rem .75rem;
-            border-bottom: 1px solid rgba(148, 163, 184, .1)
-        }
-
-        th {
-            text-align: left;
-            background: rgba(15, 23, 42, .35)
-        }
-
-        a {
-            color: #38bdf8;
-            text-decoration: none
-        }
-    </style>
+  <meta charset="utf-8">
+  <title>Ranking - BubuGame</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body{background:#0f172a;color:white;font-family:system-ui;padding:2rem;}
+    table{width:100%;max-width:480px;border-collapse:collapse;}
+    th,td{border:1px solid rgba(255,255,255,.08);padding:.4rem .5rem;}
+    th{background:rgba(255,255,255,.03);}
+    a{color:#f472b6;text-decoration:none;}
+  </style>
 </head>
-
 <body>
-    <h2>Leaderboard</h2>
-    <p><a href="{{ url_for('index') }}">← Volver al juego</a></p>
-    <table>
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Usuario</th>
-                <th>Mejor puntaje</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for i, row in enumerate(rows, start=1) %}
-            <tr>
-                <td>{{ i }}</td>
-                <td>{{ row.username }}</td>
-                <td>{{ row.best_score }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-
-    </table>
+  <h1>🏆 Ranking</h1>
+  <table>
+    <tr><th>Jugador</th><th>Puntaje</th></tr>
+    {% for r in rows %}
+      <tr>
+        <td>{{ r.username }}</td>
+        <td>{{ r.best_score }}</td>
+      </tr>
+    {% endfor %}
+  </table>
+  <p><a href="{{ url_for('index') }}">⬅ Volver al juego</a></p>
 </body>
-
 </html>

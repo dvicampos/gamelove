@@ -1,38 +1,30 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Login juego</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <link rel="manifest" href="/manifest.json">
-  <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/service-worker.js");
-    }
-  </script>
+  <meta charset="utf-8">
+  <title>Login - BubuGame</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body{background:#020617;color:#e2e8f0;font-family:system-ui;display:grid;place-items:center;min-height:100vh;margin:0}
-    .card{background:rgba(15,23,42,.35);padding:1.5rem 1.8rem;border-radius:18px;border:1px solid rgba(148,163,184,.3);width:min(100%,320px)}
-    input{width:100%;padding:.6rem .8rem;border-radius:12px;border:1px solid rgba(148,163,184,.35);background:rgba(15,23,42,.35);color:#e2e8f0;margin-bottom:.65rem}
-    button{width:100%;padding:.7rem .8rem;border:none;border-radius:12px;background:#38bdf8;color:#0f172a;font-weight:600;cursor:pointer}
-    a{color:#38bdf8;text-decoration:none;font-size:.8rem}
-    .error{background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.35);padding:.5rem .8rem;border-radius:12px;margin-bottom:.5rem;}
+    body{background:#0f172a;color:white;font-family:system-ui;display:flex;align-items:center;justify-content:center;min-height:100vh;}
+    .box{background:rgba(15,23,42,.35);border:1px solid rgba(148,163,184,.25);padding:1.5rem 1.5rem 1.25rem;border-radius:1.25rem;width: min(360px, 100%);}
+    input{width:100%;padding:.5rem .6rem;margin-bottom:.5rem;border-radius:.5rem;border:1px solid rgba(255,255,255,.08);background:rgba(15,23,42,.35);color:white;}
+    button{width:100%;background:#f472b6;border:none;padding:.55rem 0;border-radius:.75rem;color:white;font-weight:600;margin-top:.25rem;}
+    a{color:#f472b6;text-decoration:none;font-size:.8rem;}
+    .err{background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.35);padding:.4rem .5rem;border-radius:.5rem;margin-bottom:.5rem;}
   </style>
 </head>
 <body>
-  <div class="card">
-    <h2>Inicia sesión</h2>
+  <div class="box">
+    <h2>Iniciar sesión</h2>
     {% if error %}
-      <div class="error">{{ error }}</div>
+      <div class="err">{{ error }}</div>
     {% endif %}
     <form method="post">
-      <input type="text" name="username" placeholder="Usuario" required>
-      <input type="password" name="password" placeholder="Contraseña" required>
-      <button>Entrar</button>
+      <input name="username" placeholder="Usuario">
+      <input name="password" type="password" placeholder="Contraseña">
+      <button type="submit">Entrar</button>
     </form>
-    <p style="margin-top:.8rem">
-      <a href="{{ url_for('register') }}">Crear cuenta</a>
-    </p>
+    <p><a href="{{ url_for('register') }}">Crear cuenta</a></p>
   </div>
 </body>
 </html>

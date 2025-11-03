@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>BubuGame</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body{
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:#0f172a;
+      color:white;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:1.5rem;
+    }
+    .card{
+      background:rgba(15,23,42,.35);
+      border:1px solid rgba(148,163,184,.25);
+      border-radius:1.25rem;
+      padding:1.5rem 1.75rem;
+      max-width:420px;
+      width:100%;
+      backdrop-filter: blur(14px);
+    }
+    .title{
+      font-size:1.25rem;
+      font-weight:700;
+      margin-bottom:.25rem;
+    }
+    .muted{color:rgba(255,255,255,.6); font-size:.875rem;}
+    .stats{
+      display:flex;
+      gap:1rem;
+      margin-top:1.25rem;
+      margin-bottom:1.25rem;
+    }
+    .stat{
+      background:rgba(15,23,42,.25);
+      border:1px solid rgba(148,163,184,.12);
+      border-radius:1rem;
+      padding:.75rem 1rem;
+      flex:1;
+    }
+    .stat-label{
+      font-size:.65rem;
+      text-transform:uppercase;
+      letter-spacing:.04em;
+      opacity:.6;
+    }
+    .stat-value{
+      font-size:1.25rem;
+      font-weight:700;
+    }
+    .actions{
+      display:flex;
+      gap:.75rem;
+      flex-wrap:wrap;
+    }
+    .btn{
+      background:#f472b6;
+      border:none;
+      color:white;
+      border-radius:.85rem;
+      padding:.6rem 1rem;
+      text-decoration:none;
+      font-weight:600;
+      display:inline-flex;
+      align-items:center;
+      gap:.35rem;
+    }
+    .btn-secondary{
+      background:transparent;
+      border:1px solid rgba(255,255,255,.25);
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="title">Hola {{ username }}</div>
+    <p class="muted">Tu mini panel de juego 💖</p>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-label">Mejor puntaje</div>
+        <div class="stat-value">{{ best_score }}</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Puntaje actual</div>
+        <div class="stat-value">{{ current_score }}</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Nivel</div>
+        <div class="stat-value">{{ current_level }}</div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <a href="#" class="btn">▶ Jugar</a>
+      <a href="{{ url_for('logout') }}" class="btn btn-secondary">Salir</a>
+    </div>
+  </div>
+</body>
+</html>

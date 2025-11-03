@@ -24,39 +24,40 @@ function playTone(freq = 440, duration = 0.15, volume = 0.25, type = "sine") {
     osc.start();
     osc.stop(ctx.currentTime + duration);
   } catch (err) {
-    // si el navegador no deja, no pasa nada
+    // navegador no deja
   }
 }
 
-// match bonito
 function sfxCombo() {
   playTone(520, 0.11, 0.28);
   setTimeout(() => playTone(610, 0.11, 0.25), 90);
   setTimeout(() => playTone(720, 0.12, 0.22), 180);
 }
 
-// subir nivel
 function sfxLevelUp() {
   playTone(420, 0.12, 0.28, "triangle");
   setTimeout(() => playTone(560, 0.14, 0.25, "triangle"), 120);
   setTimeout(() => playTone(720, 0.16, 0.22, "triangle"), 240);
 }
 
-// movimiento correcto
 function sfxMoveOk() {
   playTone(340, 0.08, 0.22, "square");
 }
 
-// movimiento malo
 function sfxMoveBad() {
   playTone(200, 0.12, 0.25, "sawtooth");
   setTimeout(() => playTone(130, 0.12, 0.2, "sine"), 80);
 }
 
 // =====================================================
-// ====== ELEMENTOS DEL DOM ============================
+// DOM
 // =====================================================
 const board = document.getElementById("board");
+if (!board) {
+  // no estamos en la vista del juego
+  console.warn("No hay #board en este template");
+}
+
 const scoreEl = document.getElementById("score");
 const levelEl = document.getElementById("level");
 const bestEl = document.getElementById("best");
@@ -70,37 +71,26 @@ const celebrateEl = document.getElementById("celebrate");
 const levelToast = document.getElementById("level-toast");
 const levelToastText = document.getElementById("level-toast-text");
 
-// =====================================================
-// ====== CONFIG =======================================
-// =====================================================
-// emojis cute que pediste 🧸, perrito, tulipán, pintura, corazón, nota musical
+// emojis
 const emojis = ["🧸", "🐶", "🌷", "🎨", "❤️", "🎵"];
 const rows = 8;
 const cols = 8;
 const candyTypes = emojis.length;
 
-// =====================================================
-// ====== ESTADO =======================================
-// =====================================================
-// IMPORTANTE: arrancamos leyendo lo que trajo Flask
+// estado
 let score = Number(scoreEl?.textContent || 0);
 let level = Number(levelEl?.textContent || 1);
-let lastSentScore = score; // para no disparar /api/score apenas arranca
+let lastSentScore = score;
 
 let grid = [];
 let tiles = [];
 let dragged = null;
 let target = null;
 
-// =====================================================
-// ====== UTILS UI =====================================
-// =====================================================
 function playSafe(audioEl, fallbackFn) {
   if (audioEl) {
     audioEl.currentTime = 0;
-    audioEl.play().catch(() => {
-      if (fallbackFn) fallbackFn();
-    });
+    audioEl.play().catch(() => fallbackFn && fallbackFn());
   } else if (fallbackFn) {
     fallbackFn();
   }
@@ -109,25 +99,17 @@ function playSafe(audioEl, fallbackFn) {
 function showCelebrate() {
   if (!celebrateEl) return;
   celebrateEl.classList.remove("hidden");
-  setTimeout(() => {
-    celebrateEl.classList.add("hidden");
-  }, 900);
+  setTimeout(() => celebrateEl.classList.add("hidden"), 900);
 }
 
 function showLevelToastUI(lvl) {
   if (!levelToast) return;
   levelToastText.textContent = `Nivel ${lvl} 💗`;
   levelToast.classList.remove("hidden");
-  setTimeout(() => {
-    levelToast.classList.add("hidden");
-  }, 1400);
+  setTimeout(() => levelToast.classList.add("hidden"), 1400);
 }
 
-// =====================================================
-// ====== NIVELES ======================================
-// =====================================================
 function getLevelByScore(points) {
-  // puedes modificar las metas aquí
   if (points >= 1500) return 5;
   if (points >= 1000) return 4;
   if (points >= 600) return 3;
@@ -145,17 +127,12 @@ function maybeLevelUp() {
       void levelBox.offsetWidth;
       levelBox.classList.add("level-pop");
     }
-    // sonido de nivel (intenta audio <audio>, si no, web audio)
     playSafe(sfxLevel, sfxLevelUp);
     showLevelToastUI(level);
-    // guardamos el progreso porque subió de nivel
     saveProgress(score, level);
   }
 }
 
-// =====================================================
-// ====== PROGRESO (guardar en backend) ================
-// =====================================================
 async function saveProgress(score, level) {
   try {
     await fetch("/api/progress", {
@@ -168,9 +145,6 @@ async function saveProgress(score, level) {
   }
 }
 
-// =====================================================
-// ====== SCORE (ranking) ==============================
-// =====================================================
 async function sendScore(points) {
   try {
     const res = await fetch("/api/score", {
@@ -179,18 +153,14 @@ async function sendScore(points) {
       body: JSON.stringify({ points }),
     });
     const data = await res.json();
-    // si tu backend está en modo "solo guardo si es mejor"
     if (data.saved && bestEl) {
       bestEl.textContent = points;
     }
   } catch (err) {
-    console.log("No se pudo enviar puntaje (offline?):", err);
+    console.log("No se pudo enviar puntaje:", err);
   }
 }
 
-// =====================================================
-// ====== TABLERO ======================================
-// =====================================================
 function randomCandy() {
   return Math.floor(Math.random() * candyTypes);
 }
@@ -213,6 +183,7 @@ function createTile(r, c, val) {
 }
 
 function createBoard() {
+  if (!board) return;
   board.innerHTML = "";
   grid = new Array(rows);
   tiles = new Array(rows);
@@ -229,13 +200,9 @@ function createBoard() {
     }
   }
 
-  // limpiar matches iniciales
   setTimeout(removeMatches, 150);
 }
 
-// =====================================================
-// ====== DRAG & DROP ==================================
-// =====================================================
 function onDragStart(e) {
   dragged = e.target;
   dragged.classList.add("is-dragging");
@@ -264,7 +231,6 @@ function onDragEnd(e) {
     (c1 === c2 && Math.abs(r1 - r2) === 1);
 
   if (!isAdjacent) {
-    // movimiento malo
     playSafe(sfxInvalid, sfxMoveBad);
     dragged = null;
     target = null;
@@ -275,11 +241,9 @@ function onDragEnd(e) {
 
   const matched = findMatches();
   if (matched.length === 0) {
-    // no sirvió, lo regreso
     swap(r1, c1, r2, c2);
     playSafe(sfxInvalid, sfxMoveBad);
   } else {
-    // movimiento correcto
     sfxMoveOk();
     removeMatches();
   }
@@ -289,10 +253,8 @@ function onDragEnd(e) {
 }
 
 function swap(r1, c1, r2, c2) {
-  // datos
   [grid[r1][c1], grid[r2][c2]] = [grid[r2][c2], grid[r1][c1]];
 
-  // DOM
   const t1 = tiles[r1][c1];
   const t2 = tiles[r2][c2];
 
@@ -308,9 +270,6 @@ function swap(r1, c1, r2, c2) {
   t2.dataset.val = val2;
 }
 
-// =====================================================
-// ====== MATCHES ======================================
-// =====================================================
 function findMatches() {
   const toRemove = [];
 
@@ -365,31 +324,23 @@ function removeMatches() {
   const matches = findMatches();
   if (matches.length === 0) return;
 
-  // sonido de match (usa <audio> o web audio)
   playSafe(sfxMatch, sfxCombo);
 
-  // festejo si es un combo grande
   if (matches.length >= 4) {
     showCelebrate();
   }
 
-  // sumamos puntos
   score += matches.length * 10;
   if (scoreEl) scoreEl.textContent = score;
 
-  // checar nivel
   maybeLevelUp();
-
-  // guardar progreso SIEMPRE que sumemos puntos
   saveProgress(score, level);
 
-  // mandar al ranking solo cada 100 pts para no spamear
   if (score - lastSentScore >= 100) {
     sendScore(score);
     lastSentScore = score;
   }
 
-  // marcar como null y animar
   matches.forEach(({ r, c }) => {
     grid[r][c] = null;
     const tile = tiles[r][c];
@@ -398,18 +349,13 @@ function removeMatches() {
 
   setTimeout(() => {
     collapseAndRefill();
-    // por si se generan nuevos matches
     setTimeout(removeMatches, 160);
   }, 260);
 }
 
-// =====================================================
-// ====== COLAPSO / REFILL =============================
-// =====================================================
 function collapseAndRefill() {
   for (let c = 0; c < cols; c++) {
     const col = [];
-    // recolectar de abajo hacia arriba
     for (let r = rows - 1; r >= 0; r--) {
       if (grid[r][c] !== null) {
         col.push(grid[r][c]);
@@ -417,7 +363,6 @@ function collapseAndRefill() {
     }
 
     let rIdx = rows - 1;
-    // poner los que sí había
     for (let v of col) {
       grid[rIdx][c] = v;
       const tile = tiles[rIdx][c];
@@ -427,7 +372,6 @@ function collapseAndRefill() {
       rIdx--;
     }
 
-    // rellenar lo que falta
     while (rIdx >= 0) {
       const newVal = randomCandy();
       grid[rIdx][c] = newVal;
@@ -440,7 +384,7 @@ function collapseAndRefill() {
   }
 }
 
-// =====================================================
-// ====== INIT =========================================
-// =====================================================
-createBoard();
+// init
+if (board) {
+  createBoard();
+}
