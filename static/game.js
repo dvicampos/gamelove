@@ -1,4 +1,61 @@
-// ====== ELEMENTOS ======
+// =====================================================
+// ====== SONIDOS SUAVES (Web Audio + fallback) ========
+// =====================================================
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx = null;
+
+function getCtx() {
+  if (!audioCtx) {
+    audioCtx = new AudioCtx();
+  }
+  return audioCtx;
+}
+
+function playTone(freq = 440, duration = 0.15, volume = 0.25, type = "sine") {
+  try {
+    const ctx = getCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    gain.gain.value = volume;
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + duration);
+  } catch (err) {
+    // si el navegador no deja, no pasa nada
+  }
+}
+
+// match bonito
+function sfxCombo() {
+  playTone(520, 0.11, 0.28);
+  setTimeout(() => playTone(610, 0.11, 0.25), 90);
+  setTimeout(() => playTone(720, 0.12, 0.22), 180);
+}
+
+// subir nivel
+function sfxLevelUp() {
+  playTone(420, 0.12, 0.28, "triangle");
+  setTimeout(() => playTone(560, 0.14, 0.25, "triangle"), 120);
+  setTimeout(() => playTone(720, 0.16, 0.22, "triangle"), 240);
+}
+
+// movimiento correcto
+function sfxMoveOk() {
+  playTone(340, 0.08, 0.22, "square");
+}
+
+// movimiento malo
+function sfxMoveBad() {
+  playTone(200, 0.12, 0.25, "sawtooth");
+  setTimeout(() => playTone(130, 0.12, 0.2, "sine"), 80);
+}
+
+// =====================================================
+// ====== ELEMENTOS DEL DOM ============================
+// =====================================================
 const board = document.getElementById("board");
 const scoreEl = document.getElementById("score");
 const levelEl = document.getElementById("level");
@@ -13,14 +70,18 @@ const celebrateEl = document.getElementById("celebrate");
 const levelToast = document.getElementById("level-toast");
 const levelToastText = document.getElementById("level-toast-text");
 
-// ====== CONFIG ======
+// =====================================================
+// ====== CONFIG =======================================
+// =====================================================
 // emojis cute que pediste 🧸, perrito, tulipán, pintura, corazón, nota musical
 const emojis = ["🧸", "🐶", "🌷", "🎨", "❤️", "🎵"];
 const rows = 8;
 const cols = 8;
 const candyTypes = emojis.length;
 
-// ====== ESTADO ======
+// =====================================================
+// ====== ESTADO =======================================
+// =====================================================
 // IMPORTANTE: arrancamos leyendo lo que trajo Flask
 let score = Number(scoreEl?.textContent || 0);
 let level = Number(levelEl?.textContent || 1);
@@ -31,10 +92,18 @@ let tiles = [];
 let dragged = null;
 let target = null;
 
-// ====== UTILS ======
-function playSafe(audio) {
-  if (!audio) return;
-  audio.play().catch(() => {});
+// =====================================================
+// ====== UTILS UI =====================================
+// =====================================================
+function playSafe(audioEl, fallbackFn) {
+  if (audioEl) {
+    audioEl.currentTime = 0;
+    audioEl.play().catch(() => {
+      if (fallbackFn) fallbackFn();
+    });
+  } else if (fallbackFn) {
+    fallbackFn();
+  }
 }
 
 function showCelebrate() {
@@ -54,7 +123,9 @@ function showLevelToastUI(lvl) {
   }, 1400);
 }
 
-// ====== NIVELES ======
+// =====================================================
+// ====== NIVELES ======================================
+// =====================================================
 function getLevelByScore(points) {
   // puedes modificar las metas aquí
   if (points >= 1500) return 5;
@@ -74,14 +145,17 @@ function maybeLevelUp() {
       void levelBox.offsetWidth;
       levelBox.classList.add("level-pop");
     }
-    playSafe(sfxLevel);
+    // sonido de nivel (intenta audio <audio>, si no, web audio)
+    playSafe(sfxLevel, sfxLevelUp);
     showLevelToastUI(level);
     // guardamos el progreso porque subió de nivel
     saveProgress(score, level);
   }
 }
 
-// ====== PROGRESO (guardar en backend) ======
+// =====================================================
+// ====== PROGRESO (guardar en backend) ================
+// =====================================================
 async function saveProgress(score, level) {
   try {
     await fetch("/api/progress", {
@@ -94,7 +168,9 @@ async function saveProgress(score, level) {
   }
 }
 
-// ====== SCORE (ranking) ======
+// =====================================================
+// ====== SCORE (ranking) ==============================
+// =====================================================
 async function sendScore(points) {
   try {
     const res = await fetch("/api/score", {
@@ -112,7 +188,9 @@ async function sendScore(points) {
   }
 }
 
-// ====== TABLERO ======
+// =====================================================
+// ====== TABLERO ======================================
+// =====================================================
 function randomCandy() {
   return Math.floor(Math.random() * candyTypes);
 }
@@ -155,7 +233,9 @@ function createBoard() {
   setTimeout(removeMatches, 150);
 }
 
-// ====== DRAG & DROP ======
+// =====================================================
+// ====== DRAG & DROP ==================================
+// =====================================================
 function onDragStart(e) {
   dragged = e.target;
   dragged.classList.add("is-dragging");
@@ -184,7 +264,8 @@ function onDragEnd(e) {
     (c1 === c2 && Math.abs(r1 - r2) === 1);
 
   if (!isAdjacent) {
-    playSafe(sfxInvalid);
+    // movimiento malo
+    playSafe(sfxInvalid, sfxMoveBad);
     dragged = null;
     target = null;
     return;
@@ -196,8 +277,10 @@ function onDragEnd(e) {
   if (matched.length === 0) {
     // no sirvió, lo regreso
     swap(r1, c1, r2, c2);
-    playSafe(sfxInvalid);
+    playSafe(sfxInvalid, sfxMoveBad);
   } else {
+    // movimiento correcto
+    sfxMoveOk();
     removeMatches();
   }
 
@@ -225,7 +308,9 @@ function swap(r1, c1, r2, c2) {
   t2.dataset.val = val2;
 }
 
-// ====== MATCHES ======
+// =====================================================
+// ====== MATCHES ======================================
+// =====================================================
 function findMatches() {
   const toRemove = [];
 
@@ -280,8 +365,8 @@ function removeMatches() {
   const matches = findMatches();
   if (matches.length === 0) return;
 
-  // sonido de match
-  playSafe(sfxMatch);
+  // sonido de match (usa <audio> o web audio)
+  playSafe(sfxMatch, sfxCombo);
 
   // festejo si es un combo grande
   if (matches.length >= 4) {
@@ -318,7 +403,9 @@ function removeMatches() {
   }, 260);
 }
 
-// colapso por columna (bueno, sin fichas raras)
+// =====================================================
+// ====== COLAPSO / REFILL =============================
+// =====================================================
 function collapseAndRefill() {
   for (let c = 0; c < cols; c++) {
     const col = [];
@@ -353,5 +440,7 @@ function collapseAndRefill() {
   }
 }
 
-// ====== INIT ======
+// =====================================================
+// ====== INIT =========================================
+// =====================================================
 createBoard();

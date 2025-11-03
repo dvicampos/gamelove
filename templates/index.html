@@ -2,8 +2,10 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Match 3 💖</title>
+  <title>BubuGame 💖</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo.png') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='logo.png') }}">
   <link rel="manifest" href="/manifest.json" />
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
   <script>
@@ -16,7 +18,7 @@
   <div class="app">
     <header class="topbar">
       <div class="title-block">
-        <h1>Match 3 💖</h1>
+        <h1>BubuGame 💖</h1>
         <small>Hola, {{ username }}</small>
       </div>
       <div class="hud">
@@ -41,7 +43,13 @@
     <footer class="footer-links">
       <a href="{{ url_for('leaderboard') }}">🏆 Ver ranking</a>
       <span class="mini">BubuGame💗</span>
+      <button id="btn-install" class="btn-install" style="display:none;">
+        📲 Instalar
+      </button>
     </footer>
+    <div id="ios-hint" class="ios-hint" style="display:none;">
+      📱 Para instalar en iPhone: toca <strong>Compartir</strong> → <strong>“Añadir a inicio”</strong>
+    </div>
   </div>
 
   <!-- overlay de festejo -->
@@ -64,6 +72,52 @@
   <audio id="sfx-match" src="{{ url_for('static', filename='sounds/match.mp3') }}" preload="auto"></audio>
   <audio id="sfx-invalid" src="{{ url_for('static', filename='sounds/invalid.mp3') }}" preload="auto"></audio>
   <audio id="sfx-level" src="{{ url_for('static', filename='sounds/level.mp3') }}" preload="auto"></audio>
+  <script>
+    // guardaremos el evento para lanzarlo cuando el user toque el botón
+    let deferredPrompt = null;
+    const btnInstall = document.getElementById("btn-install");
+    const iosHint = document.getElementById("ios-hint");
+
+    // detectar iOS + Safari (muy básico pero sirve)
+    const isIos = /iphone|ipad|ipod/i.test(window.navigator.userAgent);
+    const isInStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+
+    // 1) iOS: no hay prompt, mostramos instrucción
+    if (isIos && !isInStandalone) {
+      if (iosHint) {
+        iosHint.style.display = "block";
+      }
+    }
+
+    // 2) Android / desktop compatible
+    window.addEventListener("beforeinstallprompt", (e) => {
+      // no muestres el prompt automático
+      e.preventDefault();
+      deferredPrompt = e;
+      // mostramos el botón
+      if (btnInstall) {
+        btnInstall.style.display = "inline-flex";
+      }
+    });
+
+    if (btnInstall) {
+      btnInstall.addEventListener("click", async () => {
+        if (!deferredPrompt) {
+          // no hay evento todavía
+          return;
+        }
+        // muestra el prompt
+        deferredPrompt.prompt();
+        // espera respuesta del usuario
+        const { outcome } = await deferredPrompt.userChoice;
+        // console.log("User choice:", outcome);
+        // ya no se puede usar de nuevo
+        deferredPrompt = null;
+        // ocultar botón si quieres
+        btnInstall.style.display = "none";
+      });
+    }
+  </script>
 
   <script src="{{ url_for('static', filename='game.js') }}"></script>
 </body>

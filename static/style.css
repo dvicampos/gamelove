@@ -272,3 +272,31 @@ body {
     order: 2;
   }
 }
+.btn-install {
+  background: rgba(56, 189, 248, .15);
+  border: 1px solid rgba(56, 189, 248, .5);
+  border-radius: 999px;
+  padding: .3rem .8rem;
+  color: #e2e8f0;
+  font-size: .7rem;
+  cursor: pointer;
+  transition: .12s ease-out;
+}
+.btn-install:hover {
+  background: rgba(56, 189, 248, .3);
+}
+
+.ios-hint {
+  position: fixed;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(2,6,23,.85);
+  border: 1px solid rgba(248,113,113,.45);
+  border-radius: 16px;
+  padding: .5rem .9rem;
+  font-size: .7rem;
+  backdrop-filter: blur(6px);
+  color: #f8fafc;
+  z-index: 50;
+}
